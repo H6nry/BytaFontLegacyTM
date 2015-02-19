@@ -1,0 +1,10 @@
+Package: org.h6nry.bytafontlegacytm
+Name: BytaFontLegacyTM
+Depends: mobilesubstrate, preferenceloader
+Provides: com.bytafont.bytafonttm
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: BytaFont Tweak Mode for old iOS versions
+Maintainer: H6nry <henry.anonym@gmail.com>
+Author: H6nry <henry.anonym@gmail.com>
+Section: Tweaks
