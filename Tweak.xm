@@ -1,4 +1,4 @@
-//#import <UIKit/UIKit.h>
+//import <UIKit/UIKit.h>
 #import <GraphicsServices/GSFont.h>
 #import <substrate.h>
 
@@ -15,44 +15,62 @@ MSHook(GSFontRef, GSFontCreateWithName, const char* fontName, GSFontTraitMask tr
 		//NSLog(@"%@",nameOfFont);
 		newfontname = [nameOfFont cStringUsingEncoding:NSASCIIStringEncoding]; //overwrite (not even existing (then, i think Helvetica Neue is needed)) fontName with your own fontname e.g. Noteworthy
 	}
-	
-	font = _GSFontCreateWithName(newfontname, traits, fontSize); //call original function and have fun :D
-	//NSLog(@"%@", font);
-	if (font == nil) {
+	if (![nameOfFont isEqualToString:@""]) {
+		font = _GSFontCreateWithName(newfontname, traits, fontSize); //call original function and have fun :D
+		//font = _GSFontCreateWithName(fontName, traits, fontSize); //call original function and have fun :D
+		
+		//NSLog(@"%@",font);
+		if (font == nil) {
+			//NSLog(@"--Font does not exist! Trying to load it...");
+			
+			
+			/*NSString *dir = [[@"/Library/BytaFont/" stringByAppendingString:nameOfFont] stringByAppendingString:@".font/"];
+			NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil];
+			NSLog(@"--------1");
+			NSPredicate *fltr = [NSPredicate predicateWithFormat:@"self ENDSWITH '.ttf'"]; //wirklich nur ttf??? oder auch ttc und otf und alles andere???
+			NSArray *onlyFonts = [dirContents filteredArrayUsingPredicate:fltr];
+			NSLog(@"--------2  ");
+			NSString *fontDir;
+			BOOL add;
+
+			for (NSString *fontDirS in onlyFonts) {
+				fontDir = [dir stringByAppendingString:fontDirS];
+				add = GSFontAddFromFile([fontDir cStringUsingEncoding:NSASCIIStringEncoding]);// /Library/CustomFonts/Regular.ttf geht mit sandbox zusammen... // /var/mobile/Library/MyFonts/Minecraft.font/Helvetica.ttc
+				NSLog(@"added:%i",add);
+			}
+			[dir release];
+			[dirContents release];
+			[fltr release];
+			[onlyFonts release];
+			[fontDir release];*/
+			NSString *dir = [[@"/Library/BytaFont/" stringByAppendingString:nameOfFont] stringByAppendingString:@".font/"];
+			NSString *fontDir = [dir stringByAppendingString:@"Regular.ttf"];
+			GSFontAddFromFile([fontDir cStringUsingEncoding:NSASCIIStringEncoding]);// /Library/CustomFonts/Regular.ttf geht mit sandbox zusammen... // /var/mobile/Library/MyFonts/Minecraft.font/Helvetica.ttc
+			
+			
+			//NSLog(@"--------3");
+		}
+		//CFRelease(font);
+		font = _GSFontCreateWithName(newfontname, traits, fontSize);
+		if (font == nil) {
+			//CFRelease(font);
+			//NSLog(@"--Could not load font! quitting now!");
+			font = _GSFontCreateWithName(fontName, traits, fontSize);
+		}
+	} else {
 		font = _GSFontCreateWithName(fontName, traits, fontSize);
-		//NSLog(@"--Font does not exist!");
 	}
+	
 	return font; //return the font
 }
 
 %ctor { //when loading this tweak
+//NSLog(@"------------------------------------------------------Loading BFLTM");
 NSDictionary *prefs = [[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/org.h6nry.bfltmprefs.plist"] autorelease];
 nameOfFont = [prefs objectForKey:@"fontname"]; //get font name from prefs
-
-
-NSString *dir = [[@"/Library/BytaFont/" stringByAppendingString:nameOfFont] stringByAppendingString:@".font/"];
-NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil];
-
-NSPredicate *fltr = [NSPredicate predicateWithFormat:@"self ENDSWITH '.ttf'"]; //wirklich nur ttf??? oder auch ttc und otf und alles andere???
-NSArray *onlyFonts = [dirContents filteredArrayUsingPredicate:fltr];
-
-BOOL add;
-NSString *fontDir;
-
-for (NSString *fontDirS in onlyFonts) {
-	fontDir = [dir stringByAppendingString:fontDirS];
-	add = GSFontAddFromFile([fontDir cStringUsingEncoding:NSASCIIStringEncoding]);// /Library/CustomFonts/Regular.ttf geht mit sandbox zusammen... // /var/mobile/Library/MyFonts/Minecraft.font/Helvetica.ttc
-	//NSLog(@"BFTM - Added Font:%i     %@",add, fontDir);
-}
-
+//nameOfFont = @"Noteworthy";
 
 MSHookFunction(GSFontCreateWithName, MSHake(GSFontCreateWithName)); //tell mobilesubstrate to hook the function with the one above
 
-
-[prefs autorelease];
-[dir autorelease];
-[fltr autorelease];
-[onlyFonts autorelease];
-[fontDir autorelease];
-[nameOfFont autorelease];
+//NSLog(@"Loaded BFLTM--------");
 }
